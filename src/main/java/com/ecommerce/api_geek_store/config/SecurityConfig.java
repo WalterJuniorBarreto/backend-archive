@@ -67,8 +67,13 @@ public class SecurityConfig {
                 // Lo privado se gestiona en cada Controller con @PreAuthorize.
                 .authorizeHttpRequests(authorize -> authorize
                         // Auth & Documentación
+                        .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
                         .requestMatchers("/api/v1/auth/**").permitAll()
-                        .requestMatchers("/v3/api-docs/**", "/swagger-ui/**", "/swagger-ui.html").permitAll()
+                        .requestMatchers("/v3/api-docs/**",       // 👈 Abre el JSON nativo
+                                "/api-docs/**",          // 👈 Por si acaso
+                                "/swagger-ui/**",        // 👈 Abre los estilos visuales
+                                "/swagger-ui.html",      // 👈 Abre la página principal
+                                "/webjars/**").permitAll()
 
                         // Lectura Pública (Catálogo)
                         .requestMatchers(HttpMethod.GET, "/api/v1/products/**").permitAll()
@@ -128,22 +133,13 @@ public class SecurityConfig {
     public CorsConfigurationSource corsConfigurationSource() {
         CorsConfiguration configuration = new CorsConfiguration();
 
-        List<String> origins = (allowedOrigins != null && !allowedOrigins.isBlank())
-                ? Arrays.asList(allowedOrigins.split(","))
-                : List.of("http://localhost:3000", "http://localhost:4200");
+        // Fijamos tu frontend explícitamente sin depender del application.properties temporalmente
+        configuration.setAllowedOrigins(List.of("http://localhost:3000"));
 
-        configuration.setAllowedOrigins(origins);
-        // Tienes PATCH, lo cual es vital para nuestro botón de Banear
         configuration.setAllowedMethods(List.of("GET", "POST", "PUT", "DELETE", "OPTIONS", "PATCH"));
 
-        // 🔥 CORRECCIÓN CRÍTICA: Agregamos nuestro Header personalizado
-        configuration.setAllowedHeaders(List.of(
-                "Authorization",
-                "Content-Type",
-                "X-Requested-With",
-                "Accept",
-                "X-Motivo-Accion" // <-- EL PASE VIP PARA SOPORTE
-        ));
+        // 🔥 ESTA ES LA CLAVE: Aceptamos CUALQUIER header con "*"
+        configuration.setAllowedHeaders(List.of("*"));
 
         configuration.setExposedHeaders(List.of("Authorization"));
         configuration.setAllowCredentials(true);

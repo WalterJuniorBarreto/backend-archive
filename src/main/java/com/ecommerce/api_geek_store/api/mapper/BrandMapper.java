@@ -4,24 +4,17 @@ package com.ecommerce.api_geek_store.api.mapper;
 import com.ecommerce.api_geek_store.api.dto.BrandRequest;
 import com.ecommerce.api_geek_store.api.dto.BrandResponse;
 import com.ecommerce.api_geek_store.domain.model.Brand;
+import org.mapstruct.Mapper;
+import org.mapstruct.Mapping;
+import org.mapstruct.MappingConstants;
+import org.mapstruct.ReportingPolicy;
 import org.springframework.stereotype.Component;
 
 
-@Component
-public class BrandMapper {
+@Mapper(componentModel = MappingConstants.ComponentModel.SPRING, unmappedTargetPolicy = ReportingPolicy.IGNORE)
+public interface BrandMapper {
 
-    public Brand toEntity(BrandRequest request) {
-        if (request == null) return null;
-        Brand brand = new Brand();
-        brand.setNombre(request.nombre().trim());
-        return brand;
-    }
-
-    public BrandResponse toResponse(Brand brand) {
-        if (brand == null) return null;
-        return new BrandResponse(
-                brand.getId(),
-                brand.getNombre()
-        );
-    }
+    @Mapping(target = "id", ignore = true)
+    Brand toEntity(BrandRequest request);
+    BrandResponse toResponse(Brand brand);
 }

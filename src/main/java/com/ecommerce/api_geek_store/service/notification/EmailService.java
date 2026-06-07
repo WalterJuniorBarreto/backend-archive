@@ -147,7 +147,7 @@ public class EmailService {
             MimeMessage mimeMessage = mailSender.createMimeMessage();
             MimeMessageHelper helper = new MimeMessageHelper(mimeMessage, "utf-8");
 
-            String link = frontendUrl + "/auth/confirm-account?token=" + token;
+            String link = frontendUrl + "/auth/confirm?token=" + token;
 
             String htmlContent = String.format("""
             <div style="font-family: 'Helvetica', sans-serif; max-width: 600px; margin: 0 auto; border: 2px solid #000; text-align: center; padding: 40px 20px;">

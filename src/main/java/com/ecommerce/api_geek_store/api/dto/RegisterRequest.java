@@ -23,7 +23,7 @@ public record RegisterRequest(
 
         @NotBlank(message = "La contraseña es obligatoria")
         @Size(min = 8, max = 32, message = "La contraseña debe tener entre 8 y 32 caracteres")
-        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!.*]).{8,}$",
+        @Pattern(regexp = "^(?=.*[0-9])(?=.*[a-z])(?=.*[A-Z])(?=.*[@#$%^&+=!_\\-/*?]).{8,}$",
                 message = "La contraseña debe contener al menos un dígito, una minúscula, una mayúscula y un carácter especial")
         String password
 ) { }

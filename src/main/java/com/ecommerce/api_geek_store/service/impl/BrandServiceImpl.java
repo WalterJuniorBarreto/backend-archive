@@ -5,91 +5,140 @@ import com.ecommerce.api_geek_store.api.dto.BrandResponse;
 import com.ecommerce.api_geek_store.api.mapper.BrandMapper;
 import com.ecommerce.api_geek_store.domain.model.Brand;
 import com.ecommerce.api_geek_store.domain.repository.BrandRepository;
+import com.ecommerce.api_geek_store.exception.DuplicateResourceException;
 import com.ecommerce.api_geek_store.exception.ResourceNotFoundException;
 import com.ecommerce.api_geek_store.service.BrandService;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
+import org.springframework.cache.annotation.CacheEvict;
+import org.springframework.cache.annotation.Cacheable;
+import org.springframework.cache.annotation.Caching;
 import org.springframework.dao.DataIntegrityViolationException;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.stereotype.Indexed;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Service
 @Transactional
+@RequiredArgsConstructor
+@Slf4j
+
 public class BrandServiceImpl implements BrandService {
 
-    private static final Logger log = LoggerFactory.getLogger(BrandServiceImpl.class);
 
     private final BrandRepository brandRepository;
     private final BrandMapper brandMapper;
 
-    public BrandServiceImpl(BrandRepository brandRepository, BrandMapper brandMapper) {
-        this.brandRepository = brandRepository;
-        this.brandMapper = brandMapper;
+
+    @Override
+    @Transactional(readOnly = true)
+    public Page<BrandResponse> findAll(String searchTerm, String statusFilter, Pageable pageable) {
+        log.debug("Consultando marcas con filtros - Busqueda: '{}', Estado: '{}'", searchTerm, statusFilter);
+
+        return brandRepository.findWithFilters(searchTerm, statusFilter, pageable)
+                .map(brandMapper::toResponse);
     }
 
     @Override
     @Transactional(readOnly = true)
-    public List<BrandResponse> findAll() {
-        return brandRepository.findAll().stream()
+    @Cacheable(value = "brandCache", key = "#id")
+    public BrandResponse findById(Long id) {
+        log.debug("Cache Miss: Buscando marca en la Base de Datos con ID: {}", id);
+        return brandRepository.findById(id)
                 .map(brandMapper::toResponse)
-                .collect(Collectors.toList());
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Marca no encontrada con el identificador: %d", id)
+                ));
     }
 
     @Override
+    @Transactional
+    @CacheEvict(value = "brandCache", allEntries = true)
     public BrandResponse create(BrandRequest request) {
+        if(brandRepository.existsByNombreIgnoreCase(request.nombre())){
+            log.warn("Intento de crear marca duplicada: {}", request.nombre());
+            throw new DuplicateResourceException(
+                    String.format("Ya existe una marca registrada con el nombre: %s", request.nombre())
+            );
+        }
         Brand brand = brandMapper.toEntity(request);
         Brand savedBrand = brandRepository.save(brand);
 
-        log.info("Nueva marca creada: ID {} - {}", savedBrand.getId(), savedBrand.getNombre());
+        log.info("Marca persistida exitosamente en DB: ID {} - {}", savedBrand.getId(), savedBrand.getNombre());
 
         return brandMapper.toResponse(savedBrand);
     }
 
-    @Override
-    @Transactional(readOnly = true)
-    public BrandResponse findById(Long id) {
-        return brandRepository.findById(id)
-                .map(brandMapper::toResponse)
-                .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con id: " + id));
-    }
 
-    @Override
-    public void delete(Long id) {
-        if (!brandRepository.existsById(id)) {
-            log.warn("Intento de eliminar marca inexistente ID: {}", id);
-            throw new ResourceNotFoundException("Marca no encontrada con id: " + id);
-        }
 
-        try {
-            brandRepository.deleteById(id);
-            log.info("Marca eliminada ID: {}", id);
 
-        } catch (DataIntegrityViolationException e) {
-            log.warn("Bloqueo de eliminación: La marca ID {} tiene productos asociados.", id);
-
-            throw new IllegalStateException("No se puede eliminar la marca porque tiene productos asociados.");
-        }
-    }
     @Override
     @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "brandCache", allEntries = true),
+            @CacheEvict(value = "brandCache", key = "#id")
+    })
     public BrandResponse update(Long id, BrandRequest request) {
-        // 1. Buscar si existe
         Brand brand = brandRepository.findById(id)
-                .orElseThrow(() -> new ResourceNotFoundException("Marca no encontrada con id: " + id));
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Marca no encontrada con id: %d", id)
+                ));
 
-        // 2. Validar que el nuevo nombre no esté duplicado (si cambió)
         if (!brand.getNombre().equalsIgnoreCase(request.nombre()) &&
-                brandRepository.existsByNombre(request.nombre())) {
-            throw new IllegalArgumentException("Ya existe una marca con el nombre: " + request.nombre());
+                brandRepository.existsByNombreIgnoreCase(request.nombre())) {
+            log.warn("COnflicto: Intento de renombrar marca ID {} a '{}' (Nombre ya en uso)", id, request.nombre());
+            throw new DuplicateResourceException(
+                    String.format("Ya existe la marca con ese nombre: %s", request.nombre())
+            );
         }
 
-        // 3. Actualizar
         brand.setNombre(request.nombre());
 
-        // 4. Guardar y retornar
-        return brandMapper.toResponse(brandRepository.save(brand));
+        log.debug("Marca ID {} actualizada en memoria. Hibernate sincronizara con BD.", id);
+
+        return brandMapper.toResponse(brand);
     }
+
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "brandCache", allEntries = true),
+            @CacheEvict(value = "brandCache", key = "#id")
+    })
+    public void delete(Long id) {
+        if (!brandRepository.existsById(id)) {
+            log.warn("Fallo de eliminación: La marca ID {} no existe o ya fue desactivada.", id);
+            throw new ResourceNotFoundException(
+                    String.format("Marca no encontrada con id: %d", id)
+            );        }
+
+        brandRepository.deleteById(id);
+        log.info("Operación exitosa: Marca ID {} desactivada lógicamente (Soft Delete).", id);
+    }
+
+    @Override
+    @Transactional
+    @Caching(evict = {
+            @CacheEvict(value = "brandCache", allEntries = true),
+            @CacheEvict(value = "brandCache", key = "#id")
+    })
+    public void activar(Long id){
+        Brand brand = brandRepository.findById(id)
+                .orElseThrow(() -> new ResourceNotFoundException(
+                        String.format("Marca no encontrada con id: %d", id)
+                ));
+
+        if(brand.getActivo()){
+            log.warn("La marca ID {} ya se encuentra activa.", id);
+            throw new IllegalStateException("La marca ya esta activa en el sistema");
+        }
+
+        brand.setActivo(true);
+        log.info("Operacion exitosa: Marca ID {} activada", id);
+    }
+
 }

@@ -16,4 +16,3 @@ public record UserResponse(
         boolean isEnabled,
         LocalDateTime createdAt
 ) { }
-

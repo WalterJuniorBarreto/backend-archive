@@ -22,18 +22,13 @@ import java.util.stream.Collectors;
 @RestControllerAdvice
 public class GlobalExceptionHandler {
 
+    // 🛡️ 1. Unificamos el TokenValidationException al estándar ProblemDetail
     @ExceptionHandler(TokenValidationException.class)
-    public ResponseEntity<MessageResponse> handleTokenValidationException(TokenValidationException ex) {
-
-        // 1. Log silencioso para DevOps (usamos warn porque no es un fallo del servidor, es error de usuario)
+    public ProblemDetail handleTokenValidationException(TokenValidationException ex, WebRequest request) {
         log.warn("Validación de token fallida: {}", ex.getMessage());
-
-        // 2. Empaquetamos el mensaje en nuestro DTO estandarizado
-        MessageResponse response = new MessageResponse(ex.getMessage());
-
-        // 3. Devolvemos el 400 Bad Request con el JSON limpio
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
+        return buildProblemDetail(HttpStatus.BAD_REQUEST, "Token Inválido", ex.getMessage(), request);
     }
+
 
     @ExceptionHandler(ResourceNotFoundException.class)
     public ProblemDetail handleResourceNotFoundException(ResourceNotFoundException ex, WebRequest request) {
@@ -41,31 +36,38 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.NOT_FOUND, "Recurso No Encontrado", ex.getMessage(), request);
     }
 
-    @ExceptionHandler({EmailAlreadyExistsException.class, IllegalStateException.class})
+    // ✅ Nivel Senior: Excepción agregada al arreglo
+    @ExceptionHandler({
+            EmailAlreadyExistsException.class,
+            IllegalStateException.class,
+            DuplicateResourceException.class // <-- ¡ESTO ES LO QUE FALTA!
+    })
     public ProblemDetail handleConflictExceptions(RuntimeException ex, WebRequest request) {
         log.warn("Conflicto de estado o datos: {}", ex.getMessage());
         return buildProblemDetail(HttpStatus.CONFLICT, "Conflicto de Datos", ex.getMessage(), request);
     }
 
-    @ExceptionHandler(MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(MethodArgumentNotValidException ex, WebRequest request){
-        List<String> errors = ex.getBindingResult().getFieldErrors().stream()
-                .map(field -> field.getField() + ": " + field.getDefaultMessage())
-                .collect(Collectors.toList());
+    // 🚀 BLINDAJE ENTERPRISE: Interceptor Absoluto de Validaciones
+    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
+    public ProblemDetail handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex, WebRequest request){
 
-        log.warn("Error de validación en input: {}", errors);
+        // 1. Extraemos el mensaje real de tu anotación (@Size, @Pattern, etc.)
+        String errorMsg = ex.getBindingResult().getFieldErrors().stream()
+                .map(field -> field.getDefaultMessage())
+                .findFirst() // Tomamos el primer error detectado
+                .orElse("Datos inválidos en el formulario");
 
-        ProblemDetail problemDetail = buildProblemDetail(
+        // 2. DevOps: Dejamos rastro en la consola de Spring Boot
+        log.warn("Validación interceptada con éxito. Enviando al frontend: {}", errorMsg);
+
+        // 3. Inyectamos el mensaje directamente en el "detail" para Next.js
+        return buildProblemDetail(
                 HttpStatus.BAD_REQUEST,
-                "Error de Validación",
-                "La petición contiene datos inválidos o incompletos",
+                "Validación Fallida",
+                errorMsg, // 🪄 Magia: Aquí viaja el "El nombre debe tener entre 2 y 50 caracteres"
                 request
         );
-        problemDetail.setProperty("invalid_params", errors);
-
-        return problemDetail;
     }
-
     @ExceptionHandler({
             InsufficientStockException.class,
             InvalidPasswordException.class,
@@ -104,9 +106,13 @@ public class GlobalExceptionHandler {
         );
     }
 
+
+
+    // 🏛️ Helper method perfectamente construido
     private ProblemDetail buildProblemDetail(HttpStatus status, String title, String detail, WebRequest request) {
         ProblemDetail problemDetail = ProblemDetail.forStatusAndDetail(status, detail);
         problemDetail.setTitle(title);
+        // Excelente detalle el URI personalizado
         problemDetail.setType(URI.create("https://api.archive.com/errors/" + status.name().toLowerCase()));
 
         problemDetail.setProperty("timestamp", LocalDateTime.now());

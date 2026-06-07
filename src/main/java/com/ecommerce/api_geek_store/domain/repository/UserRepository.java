@@ -20,7 +20,6 @@ public interface UserRepository extends JpaRepository<User, Long> {
             "LOWER(u.email) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(u.nombre) LIKE LOWER(CONCAT('%', :keyword, '%')) " +
             "OR LOWER(u.apellido) LIKE LOWER(CONCAT('%', :keyword, '%'))")
-    //@Param conecta el parametro con la query
     Page<User> searchUsers(@Param("keyword") String keyword, Pageable pageable);
 
     @Query("SELECT u FROM User u WHERE u.rol = 'ROLE_USER' AND (" +
@@ -30,4 +29,5 @@ public interface UserRepository extends JpaRepository<User, Long> {
     Page<User> searchOnlyCustomers(@Param("keyword") String keyword, Pageable pageable);
 
     Page<User> findByRol(String rol, Pageable pageable);
+
 }

@@ -16,6 +16,7 @@ import com.ecommerce.api_geek_store.service.notification.EmailService;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdToken;
 import com.google.api.client.googleapis.auth.oauth2.GoogleIdTokenVerifier;
 
+import com.google.api.client.json.webtoken.JsonWebToken;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 
@@ -91,6 +92,7 @@ public class AuthServiceImpl implements AuthService {
 
         return userMapper.toResponse(savedUser);
     }
+
     @Override
     @Transactional
     public AuthResponse login(LoginRequest loginRequest) {
@@ -112,6 +114,7 @@ public class AuthServiceImpl implements AuthService {
             throw new BadCredentialsException("Email o contraseña incorrectos");
         }
     }
+
 
     @Override
     @Transactional
@@ -146,6 +149,7 @@ public class AuthServiceImpl implements AuthService {
             log.warn("Intento de recuperación de contraseña para usuario GOOGLE: {}", maskedEmail);
             return;
         }
+
         SecureRandom secureRandom = new SecureRandom();
         String code = String.valueOf(100000 + secureRandom.nextInt(900000));
         passwordTokenRepository.findByUser(user).ifPresent(passwordTokenRepository::delete);
@@ -186,7 +190,6 @@ public class AuthServiceImpl implements AuthService {
         user.setPassword(passwordEncoder.encode(request.newPassword()));
         userRepository.save(user);
         passwordTokenRepository.delete(token);
-        // 6. Trazabilidad Segura
         log.info("Contraseña restablecida exitosamente y token destruido para: {}", maskedEmail);
     }
     @Override
@@ -225,7 +228,8 @@ public class AuthServiceImpl implements AuthService {
         }
     }
 
-    @Override
+
+        @Override
     @Transactional(readOnly = true)
     public void validateRecoveryCode(String email, String code) {
         String maskedEmail = maskEmail(email);

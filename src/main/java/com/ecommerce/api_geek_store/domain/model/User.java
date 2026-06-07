@@ -29,7 +29,6 @@ import java.util.Set;
 @EntityListeners(AuditingEntityListener.class)
 
 
-
 public class User {
 
     @Id
@@ -46,6 +45,7 @@ public class User {
     @Column(nullable = false)
     private boolean enabled = false;
 
+
     @Column(nullable = false, unique = true, length = 100)
     private String email;
 
@@ -57,11 +57,15 @@ public class User {
     @Column(length = 20, nullable = false)
     private Role rol = Role.ROLE_USER;
 
+
     @OneToMany(mappedBy = "user", cascade = {CascadeType.PERSIST, CascadeType.MERGE}, fetch = FetchType.LAZY)
     private Set<Order> orders;
 
+
+
     @OneToMany(mappedBy = "user", cascade = CascadeType.ALL, orphanRemoval = true)
     private Set<ConfirmationToken> tokens;
+
 
     @Enumerated(EnumType.STRING)
     @Column(name = "auth_provider")

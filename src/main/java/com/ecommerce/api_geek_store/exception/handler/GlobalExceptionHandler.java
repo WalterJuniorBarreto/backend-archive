@@ -1,10 +1,10 @@
-package com.ecommerce.api_geek_store.exception;
+package com.ecommerce.api_geek_store.exception.handler;
 
-import com.ecommerce.api_geek_store.api.dto.MessageResponse;
+import com.ecommerce.api_geek_store.exception.*;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
-import org.springframework.http.ResponseEntity;
+import org.springframework.http.converter.HttpMessageNotReadableException;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.security.authentication.BadCredentialsException;
 import org.springframework.security.authentication.DisabledException;
@@ -15,8 +15,6 @@ import org.springframework.web.context.request.WebRequest;
 
 import java.net.URI;
 import java.time.LocalDateTime;
-import java.util.List;
-import java.util.stream.Collectors;
 
 @Slf4j
 @RestControllerAdvice
@@ -47,27 +45,37 @@ public class GlobalExceptionHandler {
         return buildProblemDetail(HttpStatus.CONFLICT, "Conflicto de Datos", ex.getMessage(), request);
     }
 
-    // 🚀 BLINDAJE ENTERPRISE: Interceptor Absoluto de Validaciones
-    @ExceptionHandler(org.springframework.web.bind.MethodArgumentNotValidException.class)
-    public ProblemDetail handleValidationException(org.springframework.web.bind.MethodArgumentNotValidException ex, WebRequest request){
+    // 🚀 BLINDAJE ENTERPRISE: Interceptor Absoluto de Validaciones y Formatos
+    @ExceptionHandler({
+            org.springframework.web.bind.MethodArgumentNotValidException.class,
+            org.springframework.http.converter.HttpMessageNotReadableException.class, // JSON mal formado o vacío
+            org.springframework.web.HttpMediaTypeNotSupportedException.class, // Falta el header application/json
+            jakarta.validation.ConstraintViolationException.class // Validaciones a nivel de base de datos o parámetros
+    })
+    public ProblemDetail handleValidationException(Exception ex, WebRequest request){
 
-        // 1. Extraemos el mensaje real de tu anotación (@Size, @Pattern, etc.)
-        String errorMsg = ex.getBindingResult().getFieldErrors().stream()
-                .map(field -> field.getDefaultMessage())
-                .findFirst() // Tomamos el primer error detectado
-                .orElse("Datos inválidos en el formulario");
+        String errorMsg = "Los datos enviados no tienen un formato válido o están incompletos.";
 
-        // 2. DevOps: Dejamos rastro en la consola de Spring Boot
-        log.warn("Validación interceptada con éxito. Enviando al frontend: {}", errorMsg);
+        // Extraemos el mensaje específico solo si es un error de @Valid
+        if (ex instanceof org.springframework.web.bind.MethodArgumentNotValidException validEx) {
+            errorMsg = validEx.getBindingResult().getFieldErrors().stream()
+                    .map(field -> field.getDefaultMessage())
+                    .findFirst()
+                    .orElse(errorMsg);
+        }
 
-        // 3. Inyectamos el mensaje directamente en el "detail" para Next.js
+        log.warn("Petición inválida interceptada: {}", ex.getMessage());
+
+        // Ahora sí, sin importar cómo el Test intente romper la API, SIEMPRE dirá "Validación Fallida"
         return buildProblemDetail(
                 HttpStatus.BAD_REQUEST,
                 "Validación Fallida",
-                errorMsg, // 🪄 Magia: Aquí viaja el "El nombre debe tener entre 2 y 50 caracteres"
+                errorMsg,
                 request
         );
     }
+
+
     @ExceptionHandler({
             InsufficientStockException.class,
             InvalidPasswordException.class,

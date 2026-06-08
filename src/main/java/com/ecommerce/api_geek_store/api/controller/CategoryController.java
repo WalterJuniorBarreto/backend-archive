@@ -80,7 +80,7 @@ public class CategoryController {
     @GetMapping("/{id}")
     public ResponseEntity<CategoryResponse> getCategoryById(
             @Parameter(description = "ID Unico de la categoria a buscar", required = true)
-            @PathVariable Long id
+            @PathVariable("id") Long id
     ){
         log.info("REST REQUEST para obtener categoria con ID: {}", id);
         return ResponseEntity.ok(categoryService.findById(id));
@@ -148,7 +148,7 @@ public class CategoryController {
     @PutMapping("/{id}")
     public ResponseEntity<CategoryResponse> updateCategory(
             @Parameter(description = "ID unico de la caategoria a actualizar", required = true)
-            @PathVariable Long id,
+            @PathVariable("id") Long id,
             @Valid @RequestBody CategoryRequest categoryRequest){
         log.info("REST REQUEST para actualizar categoria ID {} con nuevos datos: {}", id, categoryRequest.nombre());
         CategoryResponse categoryActualizada = categoryService.update(id, categoryRequest);
@@ -169,7 +169,7 @@ public class CategoryController {
     @DeleteMapping("/{id}")
     public ResponseEntity<Void> deleteCategory(
             @Parameter(description = "ID unico de la categoria a desactivar", required = true)
-            @PathVariable Long id){
+            @PathVariable("id") Long id){
         log.info("REST REQUEST para desactivar categoria ID: {}", id);
         categoryService.deleteById(id);
         return ResponseEntity.noContent().build();
@@ -187,10 +187,10 @@ public class CategoryController {
                     content = @Content(schema = @Schema(implementation = ProblemDetail.class)))
     })
     @PreAuthorize("hasRole('ADMIN')")
-    @PatchMapping("/${id}/activate")
+    @PatchMapping("/{id}/activate")
     public ResponseEntity<Void> activateCategory(
             @Parameter(description = "ID unico de la categoria a activar", required = true)
-            @PathVariable Long id
+            @PathVariable("id") Long id
     ){
         log.info("REST REQUEST para activar categoria ID: {}", id);
 

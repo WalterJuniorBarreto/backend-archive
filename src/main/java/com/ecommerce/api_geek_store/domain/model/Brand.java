@@ -48,6 +48,12 @@ public class Brand {
     @Column(name = "updated_at")
     private LocalDateTime updatedAt;
 
+    @PrePersist
+    public void prePersist() {
+        if (this.activo == null) {
+            this.activo = true;
+        }
+    }
 
     public Brand(String nombre){
         this.nombre = nombre;

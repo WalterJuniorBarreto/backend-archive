@@ -74,7 +74,7 @@ public class BrandController {
     @GetMapping("/{id}")
     public ResponseEntity<BrandResponse> getBrandById(
             @Parameter(description = "ID unico de la marca", example = "1")
-            @PathVariable @Positive(message = "El ID de la marca debe ser mayor a cero") Long id) {
+            @PathVariable("id") @Positive(message = "El ID de la marca debe ser mayor a cero") Long id) {
         log.debug("REST Request: Intentado obtener la marca con ID: {}", id);
 
         return ResponseEntity.ok(brandService.findById(id));
@@ -122,7 +122,7 @@ public class BrandController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<BrandResponse> updateBrand(
             @Parameter(description = "ID de la marca a actualizar")
-            @PathVariable @Positive(message = "El ID debe ser valido") Long id, @Valid @RequestBody BrandRequest request) {
+            @PathVariable("id") @Positive(message = "El ID debe ser valido") Long id, @Valid @RequestBody BrandRequest request) {
         log.info("REST REQUEST: Admin actualizando marca ID: {} a nuevo nombre: {}", id, request.nombre());
         return ResponseEntity.ok(brandService.update(id, request));
     }
@@ -140,7 +140,7 @@ public class BrandController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> deleteBrand(
             @Parameter(description = "ID de la marca a desactivar")
-            @PathVariable @Positive(message = "EL ID debe ser mayor a cero") Long id) {
+            @PathVariable("id") @Positive(message = "EL ID debe ser mayor a cero") Long id) {
         log.info("REST REQUEST: Admin solicitando eliminacion de marca  ID {}", id);
         brandService.delete(id);
         return ResponseEntity.noContent().build();
@@ -160,7 +160,7 @@ public class BrandController {
     @PreAuthorize("hasRole('ADMIN')")
     public ResponseEntity<Void> activarBrand(
             @Parameter(description = "ID de la marca a reactivar")
-            @PathVariable @Positive(message = "El ID debe ser mayor a cero") Long id){
+            @PathVariable("id") @Positive(message = "El ID debe ser mayor a cero") Long id){
         log.info("REST REQUEST - Admin solicitando activacion de marca ID: {}", id);
         brandService.activar(id);
         return ResponseEntity.noContent().build();

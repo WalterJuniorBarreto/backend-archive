@@ -1,13 +1,15 @@
-package com.ecommerce.api_geek_store.config.filter; // Ajusta tu paquete si es diferente
+package com.ecommerce.api_geek_store.config.filter;
 
 import com.ecommerce.api_geek_store.service.jwt.JwtService;
+import io.jsonwebtoken.ExpiredJwtException;
+import io.jsonwebtoken.MalformedJwtException;
 import jakarta.servlet.FilterChain;
 import jakarta.servlet.ServletException;
 import jakarta.servlet.http.Cookie;
 import jakarta.servlet.http.HttpServletRequest;
 import jakarta.servlet.http.HttpServletResponse;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
+import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.lang.NonNull;
 import org.springframework.security.authentication.UsernamePasswordAuthenticationToken;
 import org.springframework.security.core.context.SecurityContextHolder;
@@ -17,22 +19,15 @@ import org.springframework.security.web.authentication.WebAuthenticationDetailsS
 import org.springframework.stereotype.Component;
 import org.springframework.web.filter.OncePerRequestFilter;
 
-import io.jsonwebtoken.ExpiredJwtException;
-import io.jsonwebtoken.MalformedJwtException;
 import java.io.IOException;
 
-@Component
+@Component // 👈 Corregido de @Bean a @Component para el escaneo de Spring
+@Slf4j // 👈 Reemplaza la creación manual del Logger de LoggerFactory
+@RequiredArgsConstructor // 👈 Genera automáticamente el constructor para los atributos final
 public class JwtAuthenticationFilter extends OncePerRequestFilter {
-
-    private static final Logger log = LoggerFactory.getLogger(JwtAuthenticationFilter.class);
 
     private final JwtService jwtService;
     private final UserDetailsService userDetailsService;
-
-    public JwtAuthenticationFilter(JwtService jwtService, UserDetailsService userDetailsService) {
-        this.jwtService = jwtService;
-        this.userDetailsService = userDetailsService;
-    }
 
     @Override
     protected void doFilterInternal(
@@ -41,21 +36,19 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             @NonNull FilterChain filterChain
     ) throws ServletException, IOException {
 
-
         String jwt = null;
-        String userEmail = null;
 
-        // 🔥 1. PRIMER INTENTO: Buscar en las Cookies (Para Next.js)
+        // 1. PRIMER INTENTO: Buscar en las Cookies (Para producción con Next.js)
         if (request.getCookies() != null) {
             for (Cookie cookie : request.getCookies()) {
-                if ("token".equals(cookie.getName())) { // "token" debe coincidir con el nombre que le diste en AuthController
+                if ("token".equals(cookie.getName())) {
                     jwt = cookie.getValue();
                     break;
                 }
             }
         }
 
-        // 🔥 2. PLAN DE RESPALDO: Buscar en el Header (Para Postman / Apps Móviles)
+        // 2. PLAN DE RESPALDO: Buscar en el Header (Para Postman y Apps Móviles)
         if (jwt == null) {
             String authHeader = request.getHeader("Authorization");
             if (authHeader != null && authHeader.startsWith("Bearer ")) {
@@ -63,15 +56,15 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
             }
         }
 
-        // Si después de buscar en ambos lados no hay JWT, dejamos que la petición siga (será rechazada si la ruta es protegida)
+        // Si no hay token, delegamos al siguiente filtro de la cadena inmediatamente
         if (jwt == null) {
             filterChain.doFilter(request, response);
             return;
         }
 
-        // 3. VALIDACIÓN DEL TOKEN (Tu lógica original intacta)
+        // 3. VALIDACIÓN TRANSACCIONAL DEL TOKEN
         try {
-            userEmail = jwtService.extractUsername(jwt);
+            String userEmail = jwtService.extractUsername(jwt);
 
             if (userEmail != null && SecurityContextHolder.getContext().getAuthentication() == null) {
                 UserDetails userDetails = this.userDetailsService.loadUserByUsername(userEmail);
@@ -91,9 +84,9 @@ public class JwtAuthenticationFilter extends OncePerRequestFilter {
         } catch (ExpiredJwtException e) {
             log.warn("Token JWT expirado: {}", e.getMessage());
         } catch (MalformedJwtException e) {
-            log.warn("Token JWT mal formado (posible ataque): {}", e.getMessage());
+            log.warn("Token JWT mal formado (posible intento de alteración): {}", e.getMessage());
         } catch (Exception e) {
-            log.error("Error inesperado procesando JWT: {}", e.getMessage());
+            log.error("Error inesperado en el ciclo de vida del filtro JWT: {}", e.getMessage());
         }
 
         filterChain.doFilter(request, response);

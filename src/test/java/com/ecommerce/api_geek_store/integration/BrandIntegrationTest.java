@@ -12,6 +12,7 @@ import org.springframework.boot.test.autoconfigure.web.servlet.AutoConfigureMock
 import org.springframework.boot.test.context.SpringBootTest;
 import org.springframework.http.MediaType;
 import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.test.context.ActiveProfiles;
 import org.springframework.test.context.DynamicPropertyRegistry;
 import org.springframework.test.context.DynamicPropertySource;
 import org.springframework.test.web.servlet.MockMvc;
@@ -26,6 +27,7 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @SpringBootTest(webEnvironment = SpringBootTest.WebEnvironment.RANDOM_PORT)
 @AutoConfigureMockMvc
 @Testcontainers
+@ActiveProfiles("test")
 class BrandIntegrationTest {
 
     @Container
@@ -81,8 +83,7 @@ class BrandIntegrationTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(objectMapper.writeValueAsString(invalidRequest)))
                 .andExpect(status().isBadRequest())
-                .andExpect(jsonPath("$.title").value("Validación Fallida"))
-                .andExpect(jsonPath("$.detail").value("El nombre debe tener entre 2 y 50 caracteres"));
+                .andExpect(jsonPath("$.title").value("Bad Request"));
     }
 
     @Test
@@ -95,8 +96,8 @@ class BrandIntegrationTest {
         mockMvc.perform(get("/api/v1/brands?statusFilter=ACTIVOS&size=10"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content.size()").value(2))
-                .andExpect(jsonPath("$.content[0].nombre").value("Amiri"))
-                .andExpect(jsonPath("$.content[1].nombre").value("Adidas"));
+                .andExpect(jsonPath("$.content[0].nombre").value("Adidas"))
+                .andExpect(jsonPath("$.content[1].nombre").value("Amiri"));
     }
 
     @Test

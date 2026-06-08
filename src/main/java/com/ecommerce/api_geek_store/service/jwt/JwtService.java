@@ -18,12 +18,9 @@ import java.util.function.Function;
 
 @Service
 public class JwtService {
+    @Value("${app.security.jwt.secret-key}")    private String secretKey;
 
-    @Value("${app.security.jwt.secret-key}")
-    private String secretKey;
-
-    @Value("${app.security.jwt.expiration-seconds:86400}")
-    private long jwtExpirationSeconds;
+    @Value("${app.security.jwt.expiration-seconds:86400}")    private long jwtExpirationSeconds;
 
     private long getJwtExpirationInMillis() {
         return jwtExpirationSeconds * 1000L;

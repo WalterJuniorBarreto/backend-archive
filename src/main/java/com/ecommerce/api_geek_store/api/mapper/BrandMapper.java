@@ -15,6 +15,7 @@ import org.springframework.stereotype.Component;
 public interface BrandMapper {
 
     @Mapping(target = "id", ignore = true)
+    @Mapping(target = "activo", ignore = true)
     Brand toEntity(BrandRequest request);
     BrandResponse toResponse(Brand brand);
 }

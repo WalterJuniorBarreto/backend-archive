@@ -304,13 +304,11 @@ public class OrderServiceImpl implements OrderService {
 
             orderItem.setCantidad(itemReq.cantidad());
 
-            orderItem.setPrecioUnitario(product.getPrecio());
+            orderItem.setPrecioUnitario(product.getPrecioBase());
 
             orderItem.setNombreProducto(product.getNombre());
 
             orderItem.setColor(variant.getColor());
-
-            orderItem.setTalla(variant.getTalla());
 
 
 
@@ -468,13 +466,12 @@ public class OrderServiceImpl implements OrderService {
 
             orderItem.setCantidad(itemReq.cantidad());
 
-            orderItem.setPrecioUnitario(product.getPrecio());
+            orderItem.setPrecioUnitario(product.getPrecioBase());
 
             orderItem.setNombreProducto(product.getNombre());
 
             orderItem.setColor(variant.getColor());
 
-            orderItem.setTalla(variant.getTalla());
 
 
 
@@ -482,7 +479,7 @@ public class OrderServiceImpl implements OrderService {
 
 
 
-            totalOrder = totalOrder.add(product.getPrecio().multiply(BigDecimal.valueOf(itemReq.cantidad())));
+            totalOrder = totalOrder.add(product.getPrecioBase().multiply(BigDecimal.valueOf(itemReq.cantidad())));
 
             costoEnvio = costoEnvio.add(tarifaEnvio.multiply(BigDecimal.valueOf(itemReq.cantidad())));
 

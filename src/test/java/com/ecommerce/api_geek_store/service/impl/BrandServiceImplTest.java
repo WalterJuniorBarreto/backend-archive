@@ -1,7 +1,7 @@
 package com.ecommerce.api_geek_store.service.impl;
 
-import com.ecommerce.api_geek_store.api.dto.BrandRequest;
-import com.ecommerce.api_geek_store.api.dto.BrandResponse;
+import com.ecommerce.api_geek_store.api.dto.request.BrandRequest;
+import com.ecommerce.api_geek_store.api.dto.response.BrandResponse;
 import com.ecommerce.api_geek_store.api.mapper.BrandMapper;
 import com.ecommerce.api_geek_store.domain.model.Brand;
 import com.ecommerce.api_geek_store.domain.repository.BrandRepository;

@@ -1,6 +1,6 @@
 package com.ecommerce.api_geek_store.integration;
 
-import com.ecommerce.api_geek_store.api.dto.CategoryRequest;
+import com.ecommerce.api_geek_store.api.dto.request.CategoryRequest;
 import com.ecommerce.api_geek_store.domain.model.Category;
 import com.ecommerce.api_geek_store.domain.model.enums.CategoryStatus;
 import com.ecommerce.api_geek_store.domain.repository.CategoryRepository;

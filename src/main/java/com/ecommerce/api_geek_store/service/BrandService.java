@@ -1,8 +1,8 @@
 package com.ecommerce.api_geek_store.service;
 
 
-import com.ecommerce.api_geek_store.api.dto.BrandRequest;
-import com.ecommerce.api_geek_store.api.dto.BrandResponse;
+import com.ecommerce.api_geek_store.api.dto.request.BrandRequest;
+import com.ecommerce.api_geek_store.api.dto.response.BrandResponse;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 

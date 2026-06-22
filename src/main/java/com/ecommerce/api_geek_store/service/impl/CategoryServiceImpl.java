@@ -1,7 +1,7 @@
 package com.ecommerce.api_geek_store.service.impl;
 
-import com.ecommerce.api_geek_store.api.dto.CategoryRequest;
-import com.ecommerce.api_geek_store.api.dto.CategoryResponse;
+import com.ecommerce.api_geek_store.api.dto.request.CategoryRequest;
+import com.ecommerce.api_geek_store.api.dto.response.CategoryResponse;
 import com.ecommerce.api_geek_store.api.mapper.CategoryMapper;
 import com.ecommerce.api_geek_store.domain.model.Category;
 import com.ecommerce.api_geek_store.domain.model.enums.CategoryStatus;
@@ -11,28 +11,21 @@ import com.ecommerce.api_geek_store.exception.ResourceNotFoundException;
 import com.ecommerce.api_geek_store.service.CategoryService;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
-import java.util.List;
-import java.util.stream.Collectors;
-
 @Service
 @RequiredArgsConstructor
 @Slf4j
-@Transactional
+@Transactional(readOnly = true)
 public class CategoryServiceImpl implements CategoryService {
 
     private final CategoryRepository categoryRepository;
     private final CategoryMapper categoryMapper;
 
     @Override
-    @Transactional(readOnly = true)
     public Page<CategoryResponse> findAll(String searchTerm, CategoryStatus status, Pageable pageable){
 
         log.info("COnsultando categorias en BD = Busqueda: {} Estado: {}", searchTerm, status);
@@ -44,7 +37,6 @@ public class CategoryServiceImpl implements CategoryService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public CategoryResponse findById(Long id) {
         log.info("COnsultando categoria en BD con ID: {}", id);
         Category category = categoryRepository.findById(id)

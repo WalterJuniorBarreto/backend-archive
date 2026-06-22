@@ -1,4 +1,4 @@
-package com.ecommerce.api_geek_store.api.dto;
+package com.ecommerce.api_geek_store.api.dto.response;
 
 import com.ecommerce.api_geek_store.domain.model.enums.CategoryStatus;
 import io.swagger.v3.oas.annotations.media.Schema;

@@ -1,7 +1,7 @@
 package com.ecommerce.api_geek_store.service.impl;
 
-import com.ecommerce.api_geek_store.api.dto.BrandRequest;
-import com.ecommerce.api_geek_store.api.dto.BrandResponse;
+import com.ecommerce.api_geek_store.api.dto.request.BrandRequest;
+import com.ecommerce.api_geek_store.api.dto.response.BrandResponse;
 import com.ecommerce.api_geek_store.api.mapper.BrandMapper;
 import com.ecommerce.api_geek_store.domain.model.Brand;
 import com.ecommerce.api_geek_store.domain.repository.BrandRepository;
@@ -13,16 +13,14 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.cache.annotation.CacheEvict;
 import org.springframework.cache.annotation.Cacheable;
 import org.springframework.cache.annotation.Caching;
-import org.springframework.dao.DataIntegrityViolationException;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
-import org.springframework.stereotype.Indexed;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 
 @Service
-@Transactional
+@Transactional(readOnly = true)
 @RequiredArgsConstructor
 @Slf4j
 
@@ -34,7 +32,6 @@ public class BrandServiceImpl implements BrandService {
 
 
     @Override
-    @Transactional(readOnly = true)
     public Page<BrandResponse> findAll(String searchTerm, String statusFilter, Pageable pageable) {
         log.debug("Consultando marcas con filtros - Busqueda: '{}', Estado: '{}'", searchTerm, statusFilter);
 
@@ -43,7 +40,6 @@ public class BrandServiceImpl implements BrandService {
     }
 
     @Override
-    @Transactional(readOnly = true)
     @Cacheable(value = "brandCache", key = "#id")
     public BrandResponse findById(Long id) {
         log.debug("Cache Miss: Buscando marca en la Base de Datos con ID: {}", id);

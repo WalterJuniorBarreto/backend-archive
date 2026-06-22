@@ -1,67 +1,45 @@
 package com.ecommerce.api_geek_store.domain.model;
 
 import jakarta.persistence.*;
-import java.util.Objects;
+import lombok.*;
+
+import java.math.BigDecimal;
 
 @Entity
-@Table(name = "product_variants")
+@Table(name = "product_variants", indexes =  {
+        @Index(name = "idx_variant_sku", columnList = "sku", unique = true),
+        @Index(name = "idx_variant_product", columnList = "product_id")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ProductVariant {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
-    @Column(nullable = false)
-    private String color;
-
-    @Column(name = "color_hex", nullable = false)
-    private String colorHex;
-
-    @Column(nullable = false)
-    private String talla;
-
-    @Column(nullable = false)
-    private Integer stock;
-
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
 
-    public ProductVariant() {}
+    @Column(nullable = false, unique = true, length = 50)
+    private String sku;
 
-    public ProductVariant(String color, String talla, Integer stock) {
-        this.color = color;
-        this.talla = talla;
-        this.stock = stock;
-    }
+    @Column(nullable = false, length = 30)
+    private String color;
 
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
+    @Column(nullable = false, length = 10)
+    private Integer stock;
 
-    public String getColor() { return color; }
-    public void setColor(String color) { this.color = color; }
+    @Column(name = "precio_adicional", precision = 10, scale = 2)
+    private BigDecimal precioAdicional;
 
-    public String getColorHex() { return colorHex; }
-    public void setColorHex(String colorHex) { this.colorHex = colorHex; }
+    @Version
+    private Long version;
 
-    public String getTalla() { return talla; }
-    public void setTalla(String talla) { this.talla = talla; }
-
-    public Integer getStock() { return stock; }
-    public void setStock(Integer stock) { this.stock = stock; }
-
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProductVariant)) return false;
-        return id != null && id.equals(((ProductVariant) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

@@ -30,7 +30,7 @@ public class ApplicationConfig {
             return org.springframework.security.core.userdetails.User.builder()
                     .username(miUsuario.getEmail())
                     .password(miUsuario.getPassword())
-                    .roles(miUsuario.getRol().name()) // Spring le agrega el prefijo "ROLE_" automáticamente
+                    .authorities(miUsuario.getRol().name()) // Spring le agrega el prefijo "ROLE_" automáticamente
                     // .disabled(miUsuario.getStatus() == UserStatus.INACTIVO) // Opcional
                     .build();
         };

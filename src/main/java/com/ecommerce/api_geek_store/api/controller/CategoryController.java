@@ -1,11 +1,12 @@
 package com.ecommerce.api_geek_store.api.controller;
 
-import com.ecommerce.api_geek_store.api.dto.CategoryRequest;
-import com.ecommerce.api_geek_store.api.dto.CategoryResponse;
+import com.ecommerce.api_geek_store.api.dto.request.CategoryRequest;
+import com.ecommerce.api_geek_store.api.dto.response.CategoryResponse;
 import com.ecommerce.api_geek_store.domain.model.enums.CategoryStatus;
 import com.ecommerce.api_geek_store.service.CategoryService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -15,24 +16,18 @@ import io.swagger.v3.oas.annotations.tags.Tag;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
-import org.checkerframework.checker.units.qual.C;
-import org.slf4j.Logger;
-import org.slf4j.LoggerFactory;
-import org.springframework.boot.autoconfigure.amqp.AbstractRabbitListenerContainerFactoryConfigurer;
-import org.springframework.context.annotation.EnableMBeanExport;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.domain.Sort;
 import org.springframework.data.web.PageableDefault;
-import org.springframework.http.HttpStatus;
 import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import org.springframework.web.util.UriComponentsBuilder;
 
 import java.net.URI;
-import java.util.List;
 
 @RestController
 @Slf4j
@@ -92,7 +87,9 @@ public class CategoryController {
             security = { @SecurityRequirement(name = "bearerAuth")}
     )
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "201", description = "Categoria creada exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Categoria creada exitosamente",
+                    headers = @Header(name = "Location", description = "URI de la categoria creada")
+            ),
             @ApiResponse(
                     responseCode = "400",
                     description = "Datos de entrada invalidos Falla de validacion",
@@ -106,14 +103,17 @@ public class CategoryController {
     })
     @PreAuthorize("hasRole('ADMIN')")
     @PostMapping
-    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest categoryRequest, UriComponentsBuilder uriComponentsBuilder){
+    public ResponseEntity<CategoryResponse> createCategory(@Valid @RequestBody CategoryRequest categoryRequest){
         log.info("REST REQUEST para crear una nueva categoria {}", categoryRequest.nombre());
 
         CategoryResponse category = categoryService.create(categoryRequest);
 
-        URI location = uriComponentsBuilder.path("api/v1/categories/{id}")
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
                 .buildAndExpand(category.id())
                 .toUri();
+
         return ResponseEntity.created(location).body(category);
     }
 

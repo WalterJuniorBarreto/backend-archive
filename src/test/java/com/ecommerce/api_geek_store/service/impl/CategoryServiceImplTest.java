@@ -1,7 +1,7 @@
 package com.ecommerce.api_geek_store.service.impl;
 
-import com.ecommerce.api_geek_store.api.dto.CategoryRequest;
-import com.ecommerce.api_geek_store.api.dto.CategoryResponse;
+import com.ecommerce.api_geek_store.api.dto.request.CategoryRequest;
+import com.ecommerce.api_geek_store.api.dto.response.CategoryResponse;
 import com.ecommerce.api_geek_store.api.mapper.CategoryMapper;
 import com.ecommerce.api_geek_store.domain.model.Category;
 import com.ecommerce.api_geek_store.domain.model.enums.CategoryStatus;

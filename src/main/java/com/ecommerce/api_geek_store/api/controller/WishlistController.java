@@ -1,6 +1,6 @@
 package com.ecommerce.api_geek_store.api.controller;
 
-import com.ecommerce.api_geek_store.api.dto.ProductResponse;
+import com.ecommerce.api_geek_store.api.dto.response.ProductResponse;
 import com.ecommerce.api_geek_store.service.WishlistService;
 import org.slf4j.Logger;
 import org.slf4j.LoggerFactory;

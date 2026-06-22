@@ -1,6 +1,6 @@
 package com.ecommerce.api_geek_store.integration;
 
-import com.ecommerce.api_geek_store.api.dto.BrandRequest;
+import com.ecommerce.api_geek_store.api.dto.request.BrandRequest;
 import com.ecommerce.api_geek_store.domain.model.Brand;
 import com.ecommerce.api_geek_store.domain.repository.BrandRepository;
 import com.fasterxml.jackson.databind.ObjectMapper;

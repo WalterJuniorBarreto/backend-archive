@@ -1,47 +1,35 @@
 package com.ecommerce.api_geek_store.domain.model;
 
 import jakarta.persistence.*;
+import lombok.*;
+
 import java.util.Objects;
 
 @Entity
-@Table(name = "product_images")
+@Table(name = "product_images", indexes = {
+        @Index(name = "idx_image_product", columnList = "product_id")
+})
+@Getter
+@Setter
+@NoArgsConstructor
+@AllArgsConstructor
+@Builder
+@EqualsAndHashCode(onlyExplicitlyIncluded = true)
 public class ProductImage {
 
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
+    @EqualsAndHashCode.Include
     private Long id;
 
+    //url de s3
     @Column(nullable = false, length = 500)
     private String url;
 
-    @ManyToOne(fetch = FetchType.LAZY)
-    @JoinColumn(name = "product_id")
+    @Column(nullable = false)
+    private Integer orden;
+
+    @ManyToOne(fetch = FetchType.LAZY, optional = false)
+    @JoinColumn(name = "product_id", nullable = false)
     private Product product;
-
-    public ProductImage() {}
-
-    public ProductImage(String url) {
-        this.url = url;
-    }
-
-    public Long getId() { return id; }
-    public void setId(Long id) { this.id = id; }
-
-    public String getUrl() { return url; }
-    public void setUrl(String url) { this.url = url; }
-
-    public Product getProduct() { return product; }
-    public void setProduct(Product product) { this.product = product; }
-
-    @Override
-    public boolean equals(Object o) {
-        if (this == o) return true;
-        if (!(o instanceof ProductImage)) return false;
-        return id != null && id.equals(((ProductImage) o).getId());
-    }
-
-    @Override
-    public int hashCode() {
-        return getClass().hashCode();
-    }
 }

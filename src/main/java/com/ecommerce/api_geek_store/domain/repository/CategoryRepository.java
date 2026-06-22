@@ -19,7 +19,7 @@ public interface CategoryRepository extends JpaRepository<Category, Long> {
 
        @Query("SELECT c FROM Category c WHERE " +
                 "(:status IS NULL OR c.status = :status) AND " +
-                "(:searchTerm IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', :searchTerm, '%')))")
+               "(:searchTerm IS NULL OR LOWER(c.nombre) LIKE LOWER(CONCAT('%', CAST(:searchTerm AS string), '%')))")
        Page<Category> findCategoriesWithFilters(
             @Param("searchTerm") String searchTerm,
             @Param("status") CategoryStatus status,

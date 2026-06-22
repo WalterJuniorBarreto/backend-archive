@@ -1,10 +1,11 @@
 package com.ecommerce.api_geek_store.api.controller;
 
-import com.ecommerce.api_geek_store.api.dto.BrandRequest;
-import com.ecommerce.api_geek_store.api.dto.BrandResponse;
+import com.ecommerce.api_geek_store.api.dto.request.BrandRequest;
+import com.ecommerce.api_geek_store.api.dto.response.BrandResponse;
 import com.ecommerce.api_geek_store.service.BrandService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.Parameter;
+import io.swagger.v3.oas.annotations.headers.Header;
 import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
@@ -23,9 +24,7 @@ import org.springframework.http.ProblemDetail;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.access.prepost.PreAuthorize;
 import org.springframework.web.bind.annotation.*;
-import org.springframework.web.util.UriComponentsBuilder;
-
-import javax.annotation.ParametersAreNonnullByDefault;
+import org.springframework.web.servlet.support.ServletUriComponentsBuilder;
 import java.net.URI;
 
 
@@ -86,7 +85,8 @@ public class BrandController {
             security = {@SecurityRequirement(name = "bearerAuth")}
     )
     @ApiResponses({
-            @ApiResponse(responseCode = "201", description = "Marca creada exitosamente"),
+            @ApiResponse(responseCode = "201", description = "Marca creada exitosamente",
+                    headers = @Header(name = "Location", description = "URI de la categoria creada")),
             @ApiResponse(responseCode = "400", description = "Error de validacion en los datos enviados",
                             content = @Content(schema = @Schema(implementation = ProblemDetail.class))),
             @ApiResponse(responseCode = "401", description = "Fallo de Autenticación (Token inválido o ausente)",
@@ -98,10 +98,12 @@ public class BrandController {
     })
     @PostMapping
     @PreAuthorize("hasRole('ADMIN')")
-    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request, UriComponentsBuilder uriComponentsBuilder) {
+    public ResponseEntity<BrandResponse> createBrand(@Valid @RequestBody BrandRequest request) {
         log.info("REST Request: Intentando crear nueva marca: {}", request.nombre());
         BrandResponse response = brandService.create(request);
-        URI location = uriComponentsBuilder.path("/api/v1/brands/{id}")
+        URI location = ServletUriComponentsBuilder
+                .fromCurrentRequest()
+                .path("/{id}")
                 .buildAndExpand(response.id())
                 .toUri();
         return ResponseEntity.created(location).body(response);

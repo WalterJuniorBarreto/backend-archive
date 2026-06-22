@@ -1,4 +1,4 @@
-package com.ecommerce.api_geek_store.api.dto;
+package com.ecommerce.api_geek_store.api.dto.response;
 
 
 import com.fasterxml.jackson.annotation.JsonProperty;

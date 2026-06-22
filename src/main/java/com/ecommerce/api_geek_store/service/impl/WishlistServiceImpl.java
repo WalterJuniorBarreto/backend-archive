@@ -1,7 +1,7 @@
 package com.ecommerce.api_geek_store.service.impl;
 
 
-import com.ecommerce.api_geek_store.api.dto.ProductResponse;
+import com.ecommerce.api_geek_store.api.dto.response.ProductResponse;
 import com.ecommerce.api_geek_store.exception.ResourceNotFoundException;
 import com.ecommerce.api_geek_store.domain.model.Product;
 import com.ecommerce.api_geek_store.domain.model.User;

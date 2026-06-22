@@ -1,4 +1,4 @@
-package com.ecommerce.api_geek_store.api.dto;
+package com.ecommerce.api_geek_store.api.dto.request;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import jakarta.validation.constraints.NotBlank;
